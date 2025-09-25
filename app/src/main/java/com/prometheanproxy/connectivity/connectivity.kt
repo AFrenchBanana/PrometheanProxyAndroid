@@ -1,6 +1,9 @@
 package com.prometheanproxy.connectivity
-
 import android.util.Log
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import okhttp3.OkHttpClient
+import okhttp3.Request
 import java.io.IOException
 import java.net.Socket
 
@@ -18,33 +21,27 @@ class Connectivity {
      * @param password The password for authentication (currently unused).
      * @return `true` if the connection was successful, `false` otherwise.
      */
-    fun connectServer(address: String, username: String, password: String): Boolean {
-        return try {
-            // Ensure any previous connection is closed before creating a new one.
-            socket?.close()
+    suspend fun connectServer(url: String, username: String, password: String): Boolean {
+        return withContext(Dispatchers.IO) {
+            try {
+                Log.e("PrometheanProxy", "Attempting to connect to https://" + url + "/api/login")
+                val client = OkHttpClient()
+                val request = Request.Builder()
+                    .url("https://" + url + "/api/login")
+                    .build()
 
-            val parts = address.split(":")
-            if (parts.size != 2) {
-                Log.e("Connectivity", "Invalid address format. Expected host:port")
-                return false
+                client.newCall(request).execute().use { response ->
+                    if (!response.isSuccessful) {
+                        throw IOException("Unexpected code $response")
+                    }
+
+                    Log.e("PrometheanProxy", response.body?.string().toString())
+                    true
+                }
+
+            } catch (e: Exception) {
+                false // Return false on failure
             }
-            val host = parts[0]
-            val port = parts[1].toInt()
-
-            // Create a new socket and connect to the server.
-            // The constructor blocks until the connection is established or an error occurs.
-            socket = Socket(host, port)
-            Log.d("Connectivity", "Successfully connected to $address")
-            true
-        } catch (e: IOException) {
-            Log.e("Connectivity", "Error connecting to server: ${e.message}", e)
-            false
-        } catch (e: NumberFormatException) {
-            Log.e("Connectivity", "Invalid port number in address: $address", e)
-            false
-        } catch (e: Exception) {
-            Log.e("Connectivity", "An unexpected error occurred during connection", e)
-            false
         }
     }
 

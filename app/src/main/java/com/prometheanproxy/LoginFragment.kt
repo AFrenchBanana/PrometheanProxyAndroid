@@ -7,17 +7,20 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
-import androidx.fragment.app.Fragment
-import androidx.navigation.fragment.findNavController
-import com.prometheanproxy.R
-import com.prometheanproxy.databinding.FragmentLoginBinding
 import androidx.core.content.edit
+import androidx.core.view.isVisible
+import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
+import androidx.navigation.fragment.findNavController
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.prometheanproxy.R
 import com.prometheanproxy.connectivity.Connectivity
+import com.prometheanproxy.databinding.FragmentLoginBinding
+import kotlinx.coroutines.launch
 
 class LoginFragment : Fragment() {
     var connectivity = Connectivity()
     private var _binding: FragmentLoginBinding? = null
-    // This property is only valid between onCreateView and onDestroyView.
     private val binding get() = _binding!!
 
     override fun onCreateView(
@@ -34,50 +37,48 @@ class LoginFragment : Fragment() {
 
         checkLogin()
 
-
         binding.loginButton.setOnClickListener {
-            binding.urlLayout.error = null
-            binding.usernameLayout.error = null
-            binding.passwordLayout.error = null
-
-            val connectionAddress = binding.urlEditText.text.toString()
-            val username = binding.usernameEditText.text.toString()
-            val password = binding.passwordEditText.text.toString()
-            var hasError = false
-            if (connectionAddress.isBlank()) {
-                binding.urlLayout.error = "URL cannot be empty"
-                hasError = true
-            }
-            if (username.isBlank()) {
-                binding.usernameLayout.error = "Username cannot be empty"
-                hasError = true
-            }
-            if (password.isBlank()) {
-                binding.passwordLayout.error = "Password cannot be empty"
-                hasError = true
-            }
-
-            if (!hasError) {
-                Log.d("LoginAttempt", "URL: $connectionAddress, Username: $username")
-                val sharedPreferences = requireActivity().getSharedPreferences(
-                    "com.prometheanproxy.login", Context.MODE_PRIVATE)
-                sharedPreferences.edit {
-                    putString("url", connectionAddress)
-                    putString("username", username)
-                    putString("password", password)
-                }
-                val connected = connectivity.connectServer(connectionAddress, username, password)
-                if (!connected) {
-                    Log.d("PrometheanProxy", "Login failed")
-                    Toast.makeText(requireContext(), "LoginFailed", Toast.LENGTH_LONG).show()
-                    return@setOnClickListener
-                }
-                findNavController().navigate(R.id.navigation_home)
-            }
+            handleLoginAttempt()
         }
     }
 
-    fun checkLogin() {
+    private fun handleLoginAttempt() {
+        binding.urlLayout.error = null
+        binding.usernameLayout.error = null
+        binding.passwordLayout.error = null
+
+        val connectionAddress = binding.urlEditText.text.toString()
+        val username = binding.usernameEditText.text.toString()
+        val password = binding.passwordEditText.text.toString()
+        var hasError = false
+        if (connectionAddress.isBlank()) {
+            binding.urlLayout.error = "URL cannot be empty"
+            hasError = true
+        }
+        if (username.isBlank()) {
+            binding.usernameLayout.error = "Username cannot be empty"
+            hasError = true
+        }
+        if (password.isBlank()) {
+            binding.passwordLayout.error = "Password cannot be empty"
+            hasError = true
+        }
+
+        if (!hasError) {
+            Log.d("LoginAttempt", "URL: $connectionAddress, Username: $username")
+            val sharedPreferences = requireActivity().getSharedPreferences(
+                "com.prometheanproxy.login", Context.MODE_PRIVATE)
+            sharedPreferences.edit {
+                putString("url", connectionAddress)
+                putString("username", username)
+                putString("password", password)
+                apply()
+            }
+            performConnection(connectionAddress, username, password)
+        }
+    }
+
+    private fun checkLogin() {
         Log.d("PrometheanProxy", "checkLogin() called")
         val sharedPreferences = requireActivity().getSharedPreferences(
             "com.prometheanproxy.login", Context.MODE_PRIVATE)
@@ -86,19 +87,77 @@ class LoginFragment : Fragment() {
         val password = sharedPreferences.getString("password", null)
 
         if (url != null && username != null && password != null) {
-            Log.d("PrometheanProxy", "Login: URL: $url, Username: $username")
-            val connected = connectivity.connectServer(url, username, password)
-            if (!connected) {
-                Log.d("PrometheanProxy", "Login failed")
-                Toast.makeText(requireContext(), "LoginFailed", Toast.LENGTH_LONG).show()
-                return
-            }
-            findNavController().navigate(R.id.navigation_home)
+            Log.d("PrometheanProxy", "Auto-Login: URL: $url, Username: $username")
+            performConnection(url, username, password)
+
         }
+    }
+
+    private fun performConnection(url: String, username: String, password: String) {
+        viewLifecycleOwner.lifecycleScope.launch {
+            setLoading(true)
+
+            val sharedPreferences = requireActivity().getSharedPreferences(
+                "com.prometheanproxy.login", Context.MODE_PRIVATE)
+
+            val connected = connectivity.connectServer(url, username, password)
+            Log.w("PrometheanProxy", "Connection result: $connected")
+
+            if (isAdded) {
+                if (connected) {
+                    setLoading(false)
+                    sharedPreferences.edit {
+                        putBoolean("validConnection", true)
+                        apply()
+                    }
+                    Log.d("PrometheanProxy", "Login successful")
+                    findNavController().navigate(R.id.navigation_home)
+                } else {
+                    Log.d("PrometheanProxy", "Login failed")
+
+                    val toastMessage = if (sharedPreferences.getBoolean("validConnection", false)) {
+                        "Login Failed"
+                    } else {
+                        "Connection Failed"
+                    }
+                    Toast.makeText(requireContext(), toastMessage, Toast.LENGTH_LONG).show()
+
+                    showRetryDialog(url, username, password)
+                }
+            }
+        }
+    }
+
+
+    private fun showRetryDialog(url: String, username: String, password: String) {
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle("Connection Failed")
+            .setMessage("Would you like to retry the connection?")
+            .setCancelable(false)
+            .setPositiveButton("Yes") { dialog, _ ->
+                performConnection(url, username, password)
+                dialog.dismiss()
+            }
+            .setNegativeButton("No") { dialog, _ ->
+                setLoading(false)
+                dialog.dismiss()
+            }
+            .show()
+    }
+
+    private fun setRetry(isRetry: Boolean) {
+        binding.retryButton.isVisible = isRetry
+        binding.loginFormGroup.isVisible = !isRetry
+    }
+
+    private fun setLoading(isLoading: Boolean) {
+        binding.loadingIndicator.isVisible = isLoading
+        binding.loginFormGroup.isVisible = !isLoading
+        binding.retryButton.isVisible = false
     }
 
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
     }
-}
+    }
