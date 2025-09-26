@@ -19,7 +19,7 @@ import com.prometheanproxy.databinding.FragmentLoginBinding
 import kotlinx.coroutines.launch
 
 class LoginFragment : Fragment() {
-    var connectivity = Connectivity()
+    private var errorToast: Toast? = null
     private var _binding: FragmentLoginBinding? = null
     private val binding get() = _binding!!
 
@@ -100,7 +100,7 @@ class LoginFragment : Fragment() {
             val sharedPreferences = requireActivity().getSharedPreferences(
                 "com.prometheanproxy.login", Context.MODE_PRIVATE)
 
-            val connected = connectivity.connectServer(url, username, password)
+            val (connected, message) = Connectivity.connectServer(url, username, password)
             Log.w("PrometheanProxy", "Connection result: $connected")
 
             if (isAdded) {
@@ -111,16 +111,21 @@ class LoginFragment : Fragment() {
                         apply()
                     }
                     Log.d("PrometheanProxy", "Login successful")
-                    findNavController().navigate(R.id.navigation_home)
+
+                    Toast.makeText(requireContext(), Connectivity.authToken, Toast.LENGTH_LONG).show()
+
+                    findNavController().navigate(R.id.navigation_beacons)
                 } else {
                     Log.d("PrometheanProxy", "Login failed")
 
                     val toastMessage = if (sharedPreferences.getBoolean("validConnection", false)) {
-                        "Login Failed"
+                        "Login Failed" + if (message != null) ": $message" else ""
                     } else {
-                        "Connection Failed"
+                        "Connection Failed" + if (message != null) ": $message" else ""
                     }
-                    Toast.makeText(requireContext(), toastMessage, Toast.LENGTH_LONG).show()
+                    errorToast?.cancel()
+                    errorToast = Toast.makeText(requireContext(), toastMessage, Toast.LENGTH_LONG)
+                    errorToast?.show()
 
                     showRetryDialog(url, username, password)
                 }

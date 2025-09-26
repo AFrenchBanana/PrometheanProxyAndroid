@@ -13,28 +13,38 @@
         tools:layout="@layout/fragment_login" >
         <!-- Add an action to navigate from login to home -->
         <action
-            android:id="@+id/action_login_to_home"
-            app:destination="@id/navigation_home"
-            app:popUpTo="@id/navigation_login"
+            android:id="@+id/action_login_to_beacons"
+            app:destination="@id/navigation_beacons"
+            app:popUpTo="@+id/navigation_login"
             app:popUpToInclusive="true" />
     </fragment>
 
     <fragment
-        android:id="@+id/navigation_home"
-        android:name="com.prometheanproxy.ui.home.HomeFragment"
-        android:label="@string/title_home"
-        tools:layout="@layout/fragment_home" />
+        android:id="@+id/navigation_beacons"
+        android:name="com.prometheanproxy.ui.beacons.BeaconsFragment"
+        android:label="Beacons"
+        tools:layout="@layout/fragment_beacons" >
+        <action
+            android:id="@+id/action_beaconsFragment_to_beaconDetailFragment"
+            app:destination="@id/navigation_beacon_detail" />
+    </fragment>
 
     <fragment
-        android:id="@+id/navigation_dashboard"
-        android:name="com.prometheanproxy.ui.dashboard.DashboardFragment"
-        android:label="@string/title_dashboard"
-        tools:layout="@layout/fragment_dashboard" />
+        android:id="@+id/navigation_sessions"
+        android:name="com.prometheanproxy.ui.sessions.SessionsFragment"
+        android:label="Sessions"
+        tools:layout="@layout/fragment_sessions" />
 
     <fragment
-        android:id="@+id/navigation_notifications"
-        android:name="com.prometheanproxy.ui.notifications.NotificationsFragment"
-        android:label="@string/title_notifications"
-        tools:layout="@layout/fragment_notifications" />
+        android:id="@+id/navigation_options"
+        android:name="com.prometheanproxy.ui.options.OptionsFragment"
+        android:label="Options"
+        tools:layout="@layout/fragment_options" />
+
+    <fragment
+        android:id="@+id/navigation_beacon_detail"
+        android:name="com.prometheanproxy.ui.beacons.BeaconDetailFragment"
+        android:label="Beacon Detail"
+        tools:layout="@layout/fragment_beacon_detail" />
 
 </navigation>
