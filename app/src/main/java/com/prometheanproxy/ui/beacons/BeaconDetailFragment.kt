@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.TextView
 import androidx.fragment.app.Fragment
 import com.prometheanproxy.R
 
@@ -28,6 +29,14 @@ class BeaconDetailFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        // TODO: Populate the views with beacon data
+        view.findViewById<TextView>(R.id.beacon_detail_uuid).text = beacon.uuid
+        view.findViewById<TextView>(R.id.beacon_detail_hostname).text = beacon.hostname
+        view.findViewById<TextView>(R.id.beacon_detail_os).text = beacon.operatingSystem
+        view.findViewById<TextView>(R.id.beacon_detail_user).text = beacon.userID
+        view.findViewById<TextView>(R.id.beacon_detail_address).text = beacon.address
+        view.findViewById<TextView>(R.id.beacon_detail_last_beacon).text = beacon.lastBeacon
+        view.findViewById<TextView>(R.id.beacon_detail_next_beacon).text = beacon.nextBeacon
+        view.findViewById<TextView>(R.id.beacon_detail_timer).text = beacon.timer
+        view.findViewById<TextView>(R.id.beacon_detail_jitter).text = beacon.jitter
     }
 }

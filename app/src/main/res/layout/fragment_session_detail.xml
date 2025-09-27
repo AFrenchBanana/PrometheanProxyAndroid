@@ -1,0 +1,189 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="16dp"
+    tools:context=".ui.sessions.SessionDetailFragment">
+
+    <TextView
+        android:id="@+id/session_detail_uuid_label"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="UUID:"
+        android:textStyle="bold"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/session_detail_uuid"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/session_detail_uuid_label"
+        app:layout_constraintTop_toTopOf="@+id/session_detail_uuid_label"
+        tools:text="f1b2c3d4-e5f6-a7b8-c9d0-e1f2a3b4c5d6" />
+
+    <TextView
+        android:id="@+id/session_detail_hostname_label"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="Hostname:"
+        android:textStyle="bold"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/session_detail_uuid" />
+
+    <TextView
+        android:id="@+id/session_detail_hostname"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/session_detail_hostname_label"
+        app:layout_constraintTop_toTopOf="@+id/session_detail_hostname_label"
+        tools:text="workstation-alpha" />
+
+    <TextView
+        android:id="@+id/session_detail_os_label"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="OS:"
+        android:textStyle="bold"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/session_detail_hostname" />
+
+    <TextView
+        android:id="@+id/session_detail_os"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/session_detail_os_label"
+        app:layout_constraintTop_toTopOf="@+id/session_detail_os_label"
+        tools:text="Windows 10" />
+
+    <TextView
+        android:id="@+id/session_detail_user_label"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="User:"
+        android:textStyle="bold"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/session_detail_os" />
+
+    <TextView
+        android:id="@+id/session_detail_user"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/session_detail_user_label"
+        app:layout_constraintTop_toTopOf="@+id/session_detail_user_label"
+        tools:text="ryand" />
+
+    <TextView
+        android:id="@+id/session_detail_address_label"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="Address:"
+        android:textStyle="bold"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/session_detail_user" />
+
+    <TextView
+        android:id="@+id/session_detail_address"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/session_detail_address_label"
+        app:layout_constraintTop_toTopOf="@+id/session_detail_address_label"
+        tools:text="192.168.1.100" />
+
+    <TextView
+        android:id="@+id/session_detail_last_session_label"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="Last Session:"
+        android:textStyle="bold"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/session_detail_address" />
+
+    <TextView
+        android:id="@+id/session_detail_last_session"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/session_detail_last_session_label"
+        app:layout_constraintTop_toTopOf="@+id/session_detail_last_session_label"
+        tools:text="2024-07-29 10:30:00" />
+
+    <TextView
+        android:id="@+id/session_detail_next_session_label"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="Next Session:"
+        android:textStyle="bold"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/session_detail_last_session" />
+
+    <TextView
+        android:id="@+id/session_detail_next_session"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/session_detail_next_session_label"
+        app:layout_constraintTop_toTopOf="@+id/session_detail_next_session_label"
+        tools:text="2024-07-29 10:35:00" />
+
+    <TextView
+        android:id="@+id/session_detail_timer_label"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="Timer:"
+        android:textStyle="bold"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/session_detail_next_session" />
+
+    <TextView
+        android:id="@+id/session_detail_timer"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/session_detail_timer_label"
+        app:layout_constraintTop_toTopOf="@+id/session_detail_timer_label"
+        tools:text="300s" />
+
+    <TextView
+        android:id="@+id/session_detail_jitter_label"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="Jitter:"
+        android:textStyle="bold"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/session_detail_timer" />
+
+    <TextView
+        android:id="@+id/session_detail_jitter"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/session_detail_jitter_label"
+        app:layout_constraintTop_toTopOf="@+id/session_detail_jitter_label"
+        tools:text="10%" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

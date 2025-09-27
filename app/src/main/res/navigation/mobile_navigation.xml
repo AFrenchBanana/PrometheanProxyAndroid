@@ -5,13 +5,11 @@
     android:id="@+id/mobile_navigation"
     app:startDestination="@id/navigation_login">
 
-    <!-- Add the new login fragment destination -->
     <fragment
         android:id="@+id/navigation_login"
         android:name="com.prometheanproxy.ui.login.LoginFragment"
         android:label="Login"
         tools:layout="@layout/fragment_login" >
-        <!-- Add an action to navigate from login to home -->
         <action
             android:id="@+id/action_login_to_beacons"
             app:destination="@id/navigation_beacons"
@@ -34,6 +32,9 @@
         android:name="com.prometheanproxy.ui.sessions.SessionsFragment"
         android:label="Sessions"
         tools:layout="@layout/fragment_sessions" />
+        <action
+            android:id="@+id/action_sessionsFragment_to_sessionDetailFragment"
+            app:destination="@id/navigation_sessions_detail" />
 
     <fragment
         android:id="@+id/navigation_options"
@@ -46,5 +47,11 @@
         android:name="com.prometheanproxy.ui.beacons.BeaconDetailFragment"
         android:label="Beacon Detail"
         tools:layout="@layout/fragment_beacon_detail" />
+
+    <fragment
+        android:id="@+id/navigation_sessions_detail"
+        android:name="com.prometheanproxy.ui.beacons.BeaconDetailFragment"
+        android:label="Beacon Detail"
+        tools:layout="@layout/fragment_session_detail" />
 
 </navigation>
