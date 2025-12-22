@@ -8,6 +8,7 @@ import android.util.Log
 import androidx.annotation.RequiresPermission
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import okhttp3.FormBody
 import java.io.IOException
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
@@ -15,6 +16,7 @@ import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import java.security.SecureRandom
 import java.security.cert.X509Certificate
+import java.util.concurrent.TimeUnit
 import javax.net.ssl.SSLContext
 import javax.net.ssl.TrustManager
 import javax.net.ssl.X509TrustManager
@@ -69,6 +71,8 @@ class NetworkManager(context: Context) {
             return OkHttpClient.Builder()
                 .sslSocketFactory(sslSocketFactory, trustAllCerts[0] as X509TrustManager)
                 .hostnameVerifier { _, _ -> true }
+                .connectTimeout(15, TimeUnit.SECONDS).readTimeout(15, TimeUnit.SECONDS)
+                .retryOnConnectionFailure(true)
                 .build()
         } catch (e: Exception) {
             throw RuntimeException(e)
@@ -114,6 +118,47 @@ class NetworkManager(context: Context) {
             }
         }
     }
+
+    public fun getJsonContentType(): String {
+        return "application/json; charset=utf-8"
+    }
+
+    suspend fun postToServer(uri: String, body: String, contentType: String): String {
+        Log.d("NetworkManager", "Posting to $uri")
+        Log.d("NetworkManager", "Posting body $body")
+        Log.d("NetworkManager", "Posting contentType $contentType")
+
+        val formattedUri = if (uri.startsWith("/")) uri else "/$uri"
+        val url = fullUrl + formattedUri
+        val mediaType = contentType.toMediaType()
+        val requestBody = body.toRequestBody(mediaType)
+
+        val request = Request.Builder()
+            .url(url)
+            .post(requestBody)
+            .header("Content-Type", contentType)
+            .build()
+
+        return withContext(Dispatchers.IO) {
+            try {
+                okHttpClient.newCall(request).execute().use { response ->
+                    if (!response.isSuccessful) {
+                        Log.e("Network Manager", "Unexpected code $response")
+                        return@withContext ""
+                    }
+
+                    val text = response.body?.string() ?: ""
+                    Log.d("Network Manager", "Response from $url: $text")
+                    text
+                }
+            } catch (e: IOException) {
+                Log.e("Network Manager", "Failed to reach server: ${e.message}")
+                ""
+            }
+        }
+    }
+
+    companion object
 
 
 }

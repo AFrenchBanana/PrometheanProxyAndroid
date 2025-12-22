@@ -16,6 +16,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.promethean.proxy.initialBoot.LoginPage
+import com.promethean.proxy.main.MainScreen
 
 
 class MainActivity : ComponentActivity() {
@@ -67,35 +68,4 @@ class MainActivity : ComponentActivity() {
 
     }
 
-}
-
-@Composable
-fun MainScreen() {
-    var selectedItem by remember { mutableIntStateOf(0) }
-    val items = listOf("Home", "Dashboard", "Notifications")
-    val icons = listOf(Icons.Filled.Home, Icons.Filled.Dashboard, Icons.Filled.Notifications)
-
-    Scaffold(
-        bottomBar = {
-            NavigationBar {
-                items.forEachIndexed { index, item ->
-                    NavigationBarItem(
-                        icon = { Icon(icons[index], contentDescription = item) },
-                        label = { Text(item) },
-                        selected = selectedItem == index,
-                        onClick = { selectedItem = index }
-                    )
-                }
-            }
-        }
-    ) { innerPadding ->
-        // Content area
-        Box(modifier = Modifier.padding(innerPadding)) {
-            when (selectedItem) {
-                0 -> Text("Home Screen", modifier = Modifier.padding(16.dp))
-                1 -> Text("Dashboard Screen")
-                2 -> Text("Notifications Screen")
-            }
-        }
-    }
 }
