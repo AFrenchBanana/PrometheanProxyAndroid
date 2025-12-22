@@ -19,5 +19,6 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "PrometheanProxy"
+rootProject.name = "com.promethean.proxy"
 include(":app")
+ 

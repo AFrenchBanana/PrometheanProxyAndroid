@@ -1,4 +1,4 @@
-package com.prometheanproxy
+package com.example.comprometheanproxy
 
 import org.junit.Test
 
