@@ -1,5 +1,6 @@
-package com.example.comprometheanproxy
+package com.promethean.proxy.initialBoot
 
+import android.content.Context
 import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
@@ -40,6 +41,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.core.content.edit
+import com.promethean.proxy.main.MainScreen
 
 class LoginPage {
 
@@ -204,7 +206,7 @@ class LoginPage {
     }
 
     @Composable
-    fun LoginForm(context: android.content.Context) {
+    fun LoginForm(context: Context) {
         var ip by remember { mutableStateOf("") }
         var port by remember { mutableStateOf("") }
         var login by remember { mutableStateOf("") }
@@ -219,12 +221,12 @@ class LoginPage {
 
         val savePreferences = {
             val sharedPreferences =
-                context.getSharedPreferences("Settings", android.content.Context.MODE_PRIVATE)
+                context.getSharedPreferences("Settings", Context.MODE_PRIVATE)
             sharedPreferences.edit() {
                 putString("url", ip)
                 putString("port", port)
                 putBoolean("withAuth", withAuth)
-                if (withAuth) {
+                if (withAuth) { // need to move these to the keystore
                     putString("login", login)
                     putString("password", password)
                 }
@@ -281,6 +283,11 @@ class LoginPage {
                         errorMessage = portError,
                         modifier = Modifier.fillMaxWidth()
                     )
+
+                    Text("Optional: With Authentication")
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
                     LoginField(
                         value = login,
                         onChange = {
@@ -288,6 +295,9 @@ class LoginPage {
                         },
                         modifier = Modifier.fillMaxWidth()
                     )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
                     PasswordField(
                         value = password,
                         onChange = {
@@ -296,6 +306,9 @@ class LoginPage {
                         submit = { },
                         modifier = Modifier.fillMaxWidth()
                     )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
                     Button(
                         onClick = {
                             if (ip.isBlank() || !ip.isValidAddress()) {
