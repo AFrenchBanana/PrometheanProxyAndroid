@@ -5,11 +5,11 @@ plugins {
 }
 
 android {
-    namespace = "com.example.comprometheanproxy"
+    namespace = "com.promethean.proxy"
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.example.comprometheanproxy"
+        applicationId = "com.promethean.proxy"
         minSdk = 33
         targetSdk = 36
         versionCode = 1
@@ -41,6 +41,7 @@ android {
 
 dependencies {
     implementation("androidx.compose.material:material-icons-extended:1.4.3")
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)

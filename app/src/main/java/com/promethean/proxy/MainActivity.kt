@@ -1,4 +1,4 @@
-package com.example.comprometheanproxy
+package com.promethean.proxy
 
 import android.os.Bundle
 import android.util.Log
@@ -15,12 +15,13 @@ import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.promethean.proxy.initialBoot.LoginPage
 
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        
+
         val isConfigured = initialConfigCheck()
 
         setContent {
@@ -30,6 +31,7 @@ class MainActivity : ComponentActivity() {
                         context = this
                     )
                 } else {
+                    Log.d("MainActivity", "Starting main screen")
                     MainScreen()
                 }
             }
@@ -42,9 +44,23 @@ class MainActivity : ComponentActivity() {
         val port = sharedPreferences.getString("port", "")
         val username = sharedPreferences.getString("username", "")
         val password = sharedPreferences.getString("password", "")
-        if (url.isNullOrEmpty() || port.isNullOrEmpty() || username.isNullOrEmpty() || password.isNullOrEmpty()) {
-            Log.d("Intial config invalid", "URL: $url, Port: $port, Username: $username, Password: $password")
+        val withAuth = sharedPreferences.getBoolean("withAuth", false)
+
+        if (url.isNullOrEmpty() || port.isNullOrEmpty()) {
+            Log.d(
+                "Intial config invalid",
+                "URL: $url, Port: $port"
+            )
             return false
+        }
+        if (withAuth) {
+            if (username.isNullOrEmpty() || password.isNullOrEmpty()) {
+                Log.d(
+                    "Intial config invalid",
+                    "Username: $username, Password: $password"
+                )
+                return false
+            }
         }
         Log.d("Intial config valid", "URL: $url")
         return true

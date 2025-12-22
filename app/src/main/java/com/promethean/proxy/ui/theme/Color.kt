@@ -1,4 +1,4 @@
-package com.example.comprometheanproxy.ui.theme
+package com.promethean.proxy.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
