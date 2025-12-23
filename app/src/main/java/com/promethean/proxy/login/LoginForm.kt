@@ -44,6 +44,7 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.edit
 import com.promethean.proxy.main.MainScreen
 import com.promethean.proxy.network.NetworkManager
+import com.promethean.proxy.ui.theme.Animation
 
 class LoginPage {
 
@@ -207,8 +208,10 @@ class LoginPage {
         )
     }
 
+
+
     @Composable
-    fun LoginForm(context: Context) {
+    fun LoginForm(context: Context, networkManager: NetworkManager) {
         var ip by remember { mutableStateOf("") }
         var port by remember { mutableStateOf("") }
         var login by remember { mutableStateOf("") }
@@ -255,36 +258,8 @@ class LoginPage {
 
         if (submitted) {
             Log.d("LoginForm", "Submitting...")
-            val networkManager = remember { NetworkManager(context) }
-            var authResult by remember { mutableStateOf<Boolean?>(null) }
-            var errorMessage by remember { mutableStateOf<String?>(null) }
 
-            LaunchedEffect(Unit) {
-                val result = Authentication().login(context, networkManager)
-                authResult = result.first
-                errorMessage = result.second
-            }
-
-                when (authResult) {
-                true -> {
-                    Log.d("LoginForm", "Authenticated")
-                    MainScreen()
-                }
-                false -> {
-                    Log.d("LoginForm", "Authentication failed: $errorMessage")
-                    Toast.makeText(context, "Auth Failed: $errorMessage", Toast.LENGTH_LONG).show()
-                    AuthFailed(
-                        errorMessage = errorMessage ?: "Unknown error",
-                        onConfirm = {
-                            submitted = false
-                            valid = false
-                        }
-                    )
-                }
-                null -> {
-                    Text("Authenticating...", modifier = Modifier.padding(16.dp))
-                }
-            }
+            Authentication().LoginUI(context, networkManager)
 
         } else {
             Surface {
@@ -391,19 +366,6 @@ private fun ConfirmNoAuth(onConfirm: () -> Unit, onDismiss: () -> Unit) {
     )
 }
 
-@Composable
-private fun AuthFailed(errorMessage: String, onConfirm: () -> Unit) {
-    AlertDialog(
-        onDismissRequest = onConfirm,
-        title = { Text(text = "Authentication Failed") },
-        text = { Text("Could not authenticate: $errorMessage") },
-        confirmButton = {
-            Button(onClick = onConfirm) {
-                Text("Retry")
-            }
-        }
-    )
-}
 
 private fun String.validPort(): Boolean {
     val port = toIntOrNull()

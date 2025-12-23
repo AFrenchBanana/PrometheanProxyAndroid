@@ -1,12 +1,24 @@
 package com.promethean.proxy
 
+import android.R
 import android.os.Bundle
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.material3.*
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import com.promethean.proxy.login.Authentication
 import com.promethean.proxy.login.LoginPage
 import com.promethean.proxy.main.MainScreen
+import com.promethean.proxy.network.NetworkManager
+import com.promethean.proxy.ui.theme.Animation
+
+
 
 
 class MainActivity : ComponentActivity() {
@@ -18,12 +30,10 @@ class MainActivity : ComponentActivity() {
         setContent {
             MaterialTheme {
                 if (!isConfigured) {
-                    LoginPage().LoginForm(
-                        context = this
-                    )
+                    LoginPage().LoginForm(context = this@MainActivity, NetworkManager(this@MainActivity))
                 } else {
                     Log.d("MainActivity", "Starting main screen")
-                    MainScreen()
+                    Authentication().LoginUI(context = this@MainActivity, NetworkManager(this@MainActivity))
                 }
             }
         }

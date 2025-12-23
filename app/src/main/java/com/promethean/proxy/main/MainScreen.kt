@@ -18,7 +18,6 @@ import androidx.compose.ui.unit.dp
 import com.promethean.proxy.network.NetworkManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import java.io.IOException
 
 @Composable
 fun MainScreen() {
