@@ -79,27 +79,7 @@ fun Dashboard(httpText: String?, onResultReceived: (String?) -> Unit) {
 
     LaunchedEffect(Unit) {
         withContext(Dispatchers.IO) {
-            var username = context.getSharedPreferences("Settings", Context.MODE_PRIVATE).getString("username", "")
-            var password = context.getSharedPreferences("Settings", Context.MODE_PRIVATE).getString("password", "")
-            if (username.isNullOrEmpty() || password.isNullOrEmpty()) {
-                throw IOException("Username or password is null or empty")
-            }
-            val jsonObject = org.json.JSONObject().apply {
-                put("username", username)
-                put("password", password)
-            }
-            val jsonString = jsonObject.toString()
 
-            try {
-                val result = networkManager.postToServer("api/login", jsonString, networkManager.getJsonContentType())
-                withContext(Dispatchers.Main) {
-                    onResultReceived(result)
-                }
-            } catch (e: Exception) {
-                withContext(Dispatchers.Main) {
-                    onResultReceived("Error: ${e.message}")
-                }
-            }
         }
     }
 

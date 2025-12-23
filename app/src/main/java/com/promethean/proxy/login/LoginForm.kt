@@ -1,4 +1,4 @@
-package com.promethean.proxy.initialBoot
+package com.promethean.proxy.login
 
 import android.content.Context
 import android.util.Log
@@ -27,6 +27,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -42,6 +43,7 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.core.content.edit
 import com.promethean.proxy.main.MainScreen
+import com.promethean.proxy.network.NetworkManager
 
 class LoginPage {
 
@@ -252,7 +254,38 @@ class LoginPage {
         }
 
         if (submitted) {
-            MainScreen()
+            Log.d("LoginForm", "Submitting...")
+            val networkManager = remember { NetworkManager(context) }
+            var authResult by remember { mutableStateOf<Boolean?>(null) }
+            var errorMessage by remember { mutableStateOf<String?>(null) }
+
+            LaunchedEffect(Unit) {
+                val result = Authentication().login(context, networkManager)
+                authResult = result.first
+                errorMessage = result.second
+            }
+
+                when (authResult) {
+                true -> {
+                    Log.d("LoginForm", "Authenticated")
+                    MainScreen()
+                }
+                false -> {
+                    Log.d("LoginForm", "Authentication failed: $errorMessage")
+                    Toast.makeText(context, "Auth Failed: $errorMessage", Toast.LENGTH_LONG).show()
+                    AuthFailed(
+                        errorMessage = errorMessage ?: "Unknown error",
+                        onConfirm = {
+                            submitted = false
+                            valid = false
+                        }
+                    )
+                }
+                null -> {
+                    Text("Authenticating...", modifier = Modifier.padding(16.dp))
+                }
+            }
+
         } else {
             Surface {
                 Column(
@@ -358,6 +391,19 @@ private fun ConfirmNoAuth(onConfirm: () -> Unit, onDismiss: () -> Unit) {
     )
 }
 
+@Composable
+private fun AuthFailed(errorMessage: String, onConfirm: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = onConfirm,
+        title = { Text(text = "Authentication Failed") },
+        text = { Text("Could not authenticate: $errorMessage") },
+        confirmButton = {
+            Button(onClick = onConfirm) {
+                Text("Retry")
+            }
+        }
+    )
+}
 
 private fun String.validPort(): Boolean {
     val port = toIntOrNull()
