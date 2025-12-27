@@ -8,6 +8,7 @@ import android.util.Log
 import androidx.annotation.RequiresPermission
 import com.promethean.proxy.login.isValidToken
 import com.promethean.proxy.main.MainScreen
+import com.promethean.proxy.validation.validPort
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
@@ -34,21 +35,16 @@ class NetworkManager(context: Context) {
 
     var connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
     var baseUrl: String? = context.getSharedPreferences("Settings", Context.MODE_PRIVATE).getString("url", "")
-    var port: String? = context.getSharedPreferences("Settings", Context.MODE_PRIVATE).getString("port", "")
+    var port: Int = context.getSharedPreferences("Settings", Context.MODE_PRIVATE).getInt("port", 0)
     var network : Network? = null
     private val fullUrl: String
     var okHttpClient = getUnsafeOkHttpClient()
 
-
-
-
     init {
-        if (baseUrl.isNullOrEmpty() || port.isNullOrEmpty()) {
-            Log.e("Network Manager", "URL or Port is null or empty")
-            throw IllegalArgumentException("URL or Port is null or empty")
-        }
+        require(!baseUrl.isNullOrEmpty()) { "Base URL cannot be null or empty" }
+        require(port.validPort()) { "Port $port is not a valid port number" }
 
-        fullUrl = if (port == "80" || baseUrl!!.contains(":")) {
+        fullUrl = if (port.toString() == "80" || baseUrl!!.contains(":")) {
             baseUrl!!
         } else {
             "https://$baseUrl:$port"
@@ -59,8 +55,9 @@ class NetworkManager(context: Context) {
         }
     }
 
-    fun login() {
-
+    suspend fun testConnection(): Boolean {
+        var data = getFromServer("/ping")
+        return data.contains("pong")
     }
 
     fun getUnsafeOkHttpClient(): OkHttpClient {

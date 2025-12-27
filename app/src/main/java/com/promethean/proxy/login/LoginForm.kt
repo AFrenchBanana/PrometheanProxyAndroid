@@ -42,9 +42,8 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.core.content.edit
-import com.promethean.proxy.main.MainScreen
 import com.promethean.proxy.network.NetworkManager
-import com.promethean.proxy.ui.theme.Animation
+import com.promethean.proxy.validation.*
 
 class LoginPage {
 
@@ -87,14 +86,12 @@ class LoginPage {
 
     @Composable
     fun PortField(
-        value: String,
-        onChange: (String) -> Unit,
+        value: Int,
+        onChange: (Int) -> Unit,
         errorMessage: String?,
-        modifier: Modifier = Modifier,
-        label: String = "Port",
+        modifier: Modifier = Modifier,        label: String = "Port",
         placeholder: String = "Please enter the port number"
     ) {
-
         val focusManager = LocalFocusManager.current
         val leadingIcon = @Composable {
             Icon(
@@ -105,20 +102,26 @@ class LoginPage {
         }
 
         TextField(
-            value = value,
-            onValueChange = onChange,
+            value = if (value == 0) "" else value.toString(),
+            onValueChange = { newValue ->
+                if (newValue.all { it.isDigit() }) {
+                    onChange(newValue.toIntOrNull() ?: 0)
+                }
+            },
             modifier = modifier,
             leadingIcon = leadingIcon,
             isError = errorMessage != null,
             supportingText = { if (errorMessage != null) Text(errorMessage) },
-            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+            keyboardOptions = KeyboardOptions(
+                keyboardType = KeyboardType.Number,
+                imeAction = ImeAction.Next
+            ),
             keyboardActions = KeyboardActions(
                 onNext = { focusManager.moveFocus(FocusDirection.Down) }
             ),
             placeholder = { Text(placeholder) },
             label = { Text(label) },
-            singleLine = true,
-            visualTransformation = VisualTransformation.None
+            singleLine = true
         )
     }
 
@@ -211,9 +214,9 @@ class LoginPage {
 
 
     @Composable
-    fun LoginForm(context: Context, networkManager: NetworkManager) {
+    fun LoginForm(context: Context) {
         var ip by remember { mutableStateOf("") }
-        var port by remember { mutableStateOf("") }
+        var port by remember { mutableStateOf<Int>(0) }
         var login by remember { mutableStateOf("") }
         var password by remember { mutableStateOf("") }
 
@@ -229,7 +232,7 @@ class LoginPage {
                 context.getSharedPreferences("Settings", Context.MODE_PRIVATE)
             sharedPreferences.edit() {
                 putString("url", ip)
-                putString("port", port)
+                putInt("port", port)
                 putBoolean("withAuth", withAuth)
                 if (withAuth) { // need to move these to the keystore
                     putString("username", login)
@@ -258,8 +261,7 @@ class LoginPage {
 
         if (submitted) {
             Log.d("LoginForm", "Submitting...")
-
-            Authentication().LoginUI(context, networkManager)
+            Authentication().LoginUI(context, NetworkManager(context))
 
         } else {
             Surface {
@@ -286,7 +288,7 @@ class LoginPage {
                         value = port,
                         onChange = {
                             port = it
-                            if (it.isNotEmpty()) portError = null
+                            if (it != 0) portError = null
                         },
                         errorMessage = portError,
                         modifier = Modifier.fillMaxWidth()
@@ -323,7 +325,7 @@ class LoginPage {
                                 ipError = "invalid IP/Domain"
                                 return@Button
                             }
-                            if (port.isBlank() || !port.validPort()) {
+                            if (!port.validPort()) {
                                 portError = "invalid port"
                                 return@Button
                             }
@@ -364,19 +366,4 @@ private fun ConfirmNoAuth(onConfirm: () -> Unit, onDismiss: () -> Unit) {
             }
         }
     )
-}
-
-
-private fun String.validPort(): Boolean {
-    val port = toIntOrNull()
-    if (port == null || port < 1 || port > 65535) {
-        return false
-    }
-    return true
-}
-
-private fun String.isValidAddress(): Boolean {
-    val ipRegex = Regex("""^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$""")
-    val domainRegex = Regex("""^[a-zA-Z0-9][a-zA-Z0-9-]+\.[a-zA-Z]{2,}$""")
-    return matches(ipRegex) || matches(domainRegex)
 }

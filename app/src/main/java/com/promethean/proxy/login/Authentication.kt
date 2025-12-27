@@ -1,9 +1,6 @@
 package com.promethean.proxy.login
 
 import android.content.Context
-import android.util.JsonToken
-import android.util.Log
-import android.widget.Toast
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
@@ -28,40 +25,63 @@ class Authentication {
         val initialToken = sharedPrefs.getString("token", "")
         val initialExpiry = sharedPrefs.getString("tokenExpiry", "")
 
+        // State management
+        var connectionStatus by remember { mutableStateOf<Boolean?>(null) } // null = checking, true = ok, false = failed
+        var authResult by remember { mutableStateOf<Boolean?>(null) }
+        var errorMessage by remember { mutableStateOf<String?>(null) }
+        var retryTrigger by remember { mutableStateOf(0) } // Used to trigger re-checks
+
+        LaunchedEffect(retryTrigger) {
+            connectionStatus = null // Reset to loading state
+            val isConnected = networkManager.testConnection()
+            connectionStatus = isConnected
+        }
+
         val isAlreadyAuthenticated = !initialToken.isNullOrEmpty() &&
                 !initialExpiry.isNullOrEmpty() &&
                 initialExpiry.isValidToken()
 
-        var authResult by remember { mutableStateOf<Boolean?>(if (isAlreadyAuthenticated) true else null) }
-        var errorMessage by remember { mutableStateOf<String?>(null) }
-
-        LaunchedEffect(isAlreadyAuthenticated) {
-            if (!isAlreadyAuthenticated) {
+        LaunchedEffect(connectionStatus, isAlreadyAuthenticated) {
+            if (connectionStatus == true && !isAlreadyAuthenticated) {
                 val result = login(context, networkManager)
                 authResult = result.first
                 errorMessage = result.second
+            } else if (connectionStatus == true && isAlreadyAuthenticated) {
+                authResult = true
             }
         }
 
-        when (authResult) {
-            true -> {
-                Log.d("LoginForm", "Authenticated")
-                MainScreen()
+        // UI Logic
+        when (connectionStatus) {
+            null -> {
+                // Show loading while testing connection
+                Animation().CircleProgressIndicator("Checking connection...")
             }
             false -> {
-                Log.d("LoginForm", "Authentication failed: $errorMessage")
                 AuthFailed(
-                    errorMessage = errorMessage ?: "Unknown error",
-                    onConfirm = {
-                        Toast.makeText(context, "Auth Failed: $errorMessage", Toast.LENGTH_LONG).show()
-                    }
+                    errorMessage = "Could not connect to server.",
+                    onConfirm = { retryTrigger++ }
                 )
             }
-            null -> {
-                Animation().CircleProgressIndicator("Connecting to server")
+            true -> {
+                when (authResult) {
+                    true -> {
+                        MainScreen(context, networkManager)
+                    }
+                    false -> {
+                        AuthFailed(
+                            errorMessage = errorMessage ?: "Unknown auth error",
+                            onConfirm = { retryTrigger++ }
+                        )
+                    }
+                    null -> {
+                        Animation().CircleProgressIndicator("Authenticating...")
+                    }
+                }
             }
         }
     }
+
 
     suspend fun login(
         context: Context,

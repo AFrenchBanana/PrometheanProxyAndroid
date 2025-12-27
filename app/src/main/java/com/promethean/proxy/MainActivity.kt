@@ -1,26 +1,22 @@
 package com.promethean.proxy
 
-import android.R
+import android.app.Application
 import android.os.Bundle
 import android.util.Log
-import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.material3.*
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import com.promethean.proxy.login.Authentication
 import com.promethean.proxy.login.LoginPage
-import com.promethean.proxy.main.MainScreen
 import com.promethean.proxy.network.NetworkManager
-import com.promethean.proxy.ui.theme.Animation
+import com.promethean.proxy.validation.validPort
+import dagger.hilt.android.HiltAndroidApp
+import dagger.hilt.android.AndroidEntryPoint
 
+@HiltAndroidApp
+class PrometheanProxy : Application()
 
-
-
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -30,7 +26,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             MaterialTheme {
                 if (!isConfigured) {
-                    LoginPage().LoginForm(context = this@MainActivity, NetworkManager(this@MainActivity))
+                    LoginPage().LoginForm(context = this@MainActivity)
                 } else {
                     Log.d("MainActivity", "Starting main screen")
                     Authentication().LoginUI(context = this@MainActivity, NetworkManager(this@MainActivity))
@@ -42,14 +38,14 @@ class MainActivity : ComponentActivity() {
     fun initialConfigCheck(): Boolean {
         val sharedPreferences = getSharedPreferences("Settings", MODE_PRIVATE)
         val url = sharedPreferences.getString("url", "")
-        val port = sharedPreferences.getString("port", "")
+        val port = sharedPreferences.getInt("port", 0)
         val username = sharedPreferences.getString("username", "")
         val password = sharedPreferences.getString("password", "")
         val withAuth = sharedPreferences.getBoolean("withAuth", false)
 
-        if (url.isNullOrEmpty() || port.isNullOrEmpty()) {
+        if (url.isNullOrEmpty() || !port.validPort()) {
             Log.d(
-                "Intial config invalid",
+                "Initial config invalid",
                 "URL: $url, Port: $port"
             )
             return false
@@ -57,15 +53,13 @@ class MainActivity : ComponentActivity() {
         if (withAuth) {
             if (username.isNullOrEmpty() || password.isNullOrEmpty()) {
                 Log.d(
-                    "Intial config invalid",
+                    "Initial config invalid",
                     "Username: $username, Password: $password"
                 )
                 return false
             }
         }
-        Log.d("Intial config valid", "URL: $url")
+        Log.d("Initial config valid", "URL: $url")
         return true
-
     }
-
 }

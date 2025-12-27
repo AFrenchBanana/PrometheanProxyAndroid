@@ -20,11 +20,13 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 @Composable
-fun MainScreen() {
+fun MainScreen(context: Context, networkManager: NetworkManager) {
     var selectedItem by remember { mutableIntStateOf(0) }
     val items = listOf("Home", "Dashboard", "Config")
     val icons = listOf(Icons.Filled.Home, Icons.Filled.Dashboard, Icons.Filled.Settings)
     var httptext by remember { mutableStateOf<String?>("") }
+
+    var config = Config(context, networkManager)
 
     Scaffold(
 
@@ -47,8 +49,8 @@ fun MainScreen() {
                     httpText = httptext,
                     onResultReceived = { httptext = it }
                 )
-                1 -> Text("Dashboard Details Screen", modifier = Modifier.padding(16.dp))
-                2 -> Text("Configuration Settings", modifier = Modifier.padding(16.dp))
+                1 -> Text("Placeholder for Dash")
+                2 -> config.ConfigUI()
             }
         }
     }
