@@ -24,7 +24,6 @@ import androidx.compose.ui.window.Dialog
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
 import com.promethean.proxy.R
-import com.promethean.proxy.network.NetworkManager
 import com.promethean.proxy.ui.theme.Preferences
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.text.DecimalFormatSymbols
@@ -34,10 +33,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import androidx.compose.ui.graphics.vector.ImageVector
 
-class Config(context: Context, networkManager: NetworkManager) {
+class Config() {
 
     var preferences = Preferences()
-    private val sharedPrefs = context.getSharedPreferences("Settings", Context.MODE_PRIVATE)
 
     @OptIn(ExperimentalMaterial3Api::class)
     @Composable

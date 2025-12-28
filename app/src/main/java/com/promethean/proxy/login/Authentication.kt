@@ -1,6 +1,6 @@
 package com.promethean.proxy.login
 
-import android.content.Context
+import android.content.SharedPreferences
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
@@ -10,29 +10,53 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import com.promethean.proxy.network.NetworkManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import androidx.core.content.edit
-import com.promethean.proxy.main.MainScreen
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.ViewModel
+import com.promethean.proxy.network.NetworkManager
+import com.promethean.proxy.di.SettingsPrefs
+import com.promethean.proxy.main.LoadMainScreen
 import com.promethean.proxy.ui.theme.Animation
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 
-class Authentication {
+
+@Composable
+fun AuthenticationScreen(
+    authViewModel: Authentication = hiltViewModel()
+) {
+    authViewModel.AuthenticationUI()
+}
+
+
+@HiltViewModel
+class Authentication @Inject constructor(
+    val networkManager: NetworkManager,
+    @SettingsPrefs val prefs: SharedPreferences
+) : ViewModel() {
+
+    var connectionStatus by mutableStateOf<Boolean?>(null)
+    var authResult by mutableStateOf<Boolean?>(null)
+    var errorMessage by mutableStateOf<String?>(null)
+    var retryTrigger by mutableStateOf(0)
+    var isManualLoginMode by mutableStateOf(false)
+
 
     @Composable
-    fun LoginUI(context: Context, networkManager: NetworkManager) {
-        val sharedPrefs = remember { context.getSharedPreferences("Settings", Context.MODE_PRIVATE) }
-        val initialToken = sharedPrefs.getString("token", "")
-        val initialExpiry = sharedPrefs.getString("tokenExpiry", "")
+    fun AuthenticationUI() {
 
-        // State management
-        var connectionStatus by remember { mutableStateOf<Boolean?>(null) } // null = checking, true = ok, false = failed
-        var authResult by remember { mutableStateOf<Boolean?>(null) }
-        var errorMessage by remember { mutableStateOf<String?>(null) }
-        var retryTrigger by remember { mutableStateOf(0) } // Used to trigger re-checks
+        if (isManualLoginMode) {
+            LoginPageUI()
+            return
+        }
+
+        val initialToken = prefs.getString("token", "")
+        val initialExpiry = prefs.getString("tokenExpiry", "")
 
         LaunchedEffect(retryTrigger) {
-            connectionStatus = null // Reset to loading state
+            connectionStatus = null
             val isConnected = networkManager.testConnection()
             connectionStatus = isConnected
         }
@@ -43,7 +67,7 @@ class Authentication {
 
         LaunchedEffect(connectionStatus, isAlreadyAuthenticated) {
             if (connectionStatus == true && !isAlreadyAuthenticated) {
-                val result = login(context, networkManager)
+                val result = login()
                 authResult = result.first
                 errorMessage = result.second
             } else if (connectionStatus == true && isAlreadyAuthenticated) {
@@ -51,12 +75,8 @@ class Authentication {
             }
         }
 
-        // UI Logic
         when (connectionStatus) {
-            null -> {
-                // Show loading while testing connection
-                Animation().CircleProgressIndicator("Checking connection...")
-            }
+            null -> Animation().CircleProgressIndicator("Checking connection...")
             false -> {
                 AuthFailed(
                     errorMessage = "Could not connect to server.",
@@ -65,31 +85,21 @@ class Authentication {
             }
             true -> {
                 when (authResult) {
-                    true -> {
-                        MainScreen(context, networkManager)
-                    }
-                    false -> {
-                        AuthFailed(
-                            errorMessage = errorMessage ?: "Unknown auth error",
-                            onConfirm = { retryTrigger++ }
-                        )
-                    }
-                    null -> {
-                        Animation().CircleProgressIndicator("Authenticating...")
-                    }
+                    true -> LoadMainScreen()
+                    false -> AuthFailed(
+                        errorMessage = errorMessage ?: "Unknown auth error",
+                        onConfirm = { retryTrigger++ }
+                    )
+                    null -> Animation().CircleProgressIndicator("Authenticating...")
                 }
             }
         }
     }
 
-
     suspend fun login(
-        context: Context,
-        networkManager: NetworkManager
     ): Pair<Boolean, String> = withContext(Dispatchers.IO) {
-        val sharedPrefs = context.getSharedPreferences("Settings", Context.MODE_PRIVATE)
-        val username = sharedPrefs.getString("username", "")
-        val password = sharedPrefs.getString("password", "")
+        val username = prefs.getString("username", "")
+        val password = prefs.getString("password", "")
 
         if (username.isNullOrEmpty()) {
             return@withContext Pair(false, "Username is empty")
@@ -101,7 +111,7 @@ class Authentication {
         }.toString()
 
         val returnBody: String = try {
-            networkManager.postToServer(
+            networkManager.post(
                 "api/login",
                 jsonString,
                 networkManager.getJsonContentType()
@@ -116,7 +126,7 @@ class Authentication {
                 val token = jsonResult.getString("token")
                 val expires = jsonResult.getString("expires")
 
-                sharedPrefs.edit {
+                prefs.edit {
                     putString("token", token)
                         .putString("tokenExpiry", expires)
                 }
@@ -139,6 +149,13 @@ class Authentication {
             confirmButton = {
                 Button(onClick = onConfirm) {
                     Text("Retry")
+                }
+            },
+            dismissButton = {
+                Button(onClick = {
+                    isManualLoginMode = true
+                }) {
+                    Text("Edit Settings")
                 }
             }
         )
