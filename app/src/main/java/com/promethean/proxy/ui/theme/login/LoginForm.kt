@@ -1,7 +1,6 @@
-package com.promethean.proxy.login
+package com.promethean.proxy.ui.theme.login
 
 import android.content.Context
-import android.content.SharedPreferences
 import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.layout.*
@@ -21,27 +20,42 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
-import androidx.core.content.edit
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.intPreferencesKey
+import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
 import com.promethean.proxy.network.NetworkManager
-import com.promethean.proxy.di.SettingsPrefs
+import com.promethean.proxy.network.NetworkManager.Companion.scope
 import com.promethean.proxy.validation.*
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class LoginViewModel @Inject constructor(
     val networkManager: NetworkManager,
-    @SettingsPrefs private val prefs: SharedPreferences
+    private val dataStore: DataStore<Preferences>,
 ) : ViewModel() {
 
-    fun saveAndConnect(ip: String, port: Int, login: String, password: String, onComplete: () -> Unit) {
-        prefs.edit {
-            putString("url", ip)
-            putInt("port", port)
-            putString("username", login)
-            putString("password", password)
+    private companion object {
+        private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
+
+
+    }
+
+    suspend fun saveAndConnect(ip: String, port: Int, username: String, password: String, onComplete: () -> Unit) {
+
+        dataStore.edit { prefs ->
+            prefs[URL_KEY] = ip
+            prefs[PORT_KEY] = port
+            prefs[USERNAME_KEY] = username
+            prefs[PASSWORD_KEY] = password
         }
 
         networkManager.updateConfig()
@@ -71,14 +85,16 @@ fun LoginForm(viewModel: LoginViewModel, context: Context) {
     val focusManager = LocalFocusManager.current
 
     val performConnection = {
-        viewModel.saveAndConnect(ip, port, login, password) {
-            Log.d("LoginForm", "Preferences saved and Config Updated")
-            Toast.makeText(context, "Settings updated", Toast.LENGTH_SHORT).show()
+        scope.launch {
+            viewModel.saveAndConnect(ip, port, login, password) {
+                Log.d("LoginForm", "Preferences saved and Config Updated")
+                Toast.makeText(context, "Settings updated", Toast.LENGTH_SHORT).show()
 
-            if (viewModel.networkManager.haveNetwork()) {
-                submitted = true
-            } else {
-                Toast.makeText(context, "No network connection", Toast.LENGTH_LONG).show()
+                if (viewModel.networkManager.haveNetwork()) {
+                    submitted = true
+                } else {
+                    Toast.makeText(context, "No network connection", Toast.LENGTH_LONG).show()
+                }
             }
         }
     }

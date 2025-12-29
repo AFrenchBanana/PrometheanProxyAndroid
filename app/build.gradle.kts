@@ -44,7 +44,9 @@ android {
 }
 
 dependencies {
+    implementation("androidx.datastore:datastore-preferences:1.1.1")
     implementation("com.google.dagger:hilt-android:${libs.versions.hilt.get()}")
+    implementation(libs.androidx.datastore.core)
     ksp("com.google.dagger:hilt-android-compiler:${libs.versions.hilt.get()}")
     implementation("androidx.hilt:hilt-navigation-compose:1.2.0")
     implementation("androidx.compose.material:material-icons-extended:1.7.6")

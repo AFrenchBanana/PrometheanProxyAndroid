@@ -6,8 +6,8 @@ import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.material3.*
-import com.promethean.proxy.login.AuthenticationScreen
-import com.promethean.proxy.login.LoginPageUI
+import com.promethean.proxy.ui.theme.login.AuthenticationScreen
+import com.promethean.proxy.ui.theme.login.LoginPageUI
 import com.promethean.proxy.validation.validPort
 import dagger.hilt.android.HiltAndroidApp
 import dagger.hilt.android.AndroidEntryPoint

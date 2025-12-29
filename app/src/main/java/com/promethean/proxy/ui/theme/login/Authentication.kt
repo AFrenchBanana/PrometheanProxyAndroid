@@ -1,6 +1,5 @@
-package com.promethean.proxy.login
+package com.promethean.proxy.ui.theme.login
 
-import android.content.SharedPreferences
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
@@ -8,18 +7,19 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import androidx.core.content.edit
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
+import com.promethean.proxy.di.PreferenceRepository
 import com.promethean.proxy.network.NetworkManager
-import com.promethean.proxy.di.SettingsPrefs
-import com.promethean.proxy.main.LoadMainScreen
+import com.promethean.proxy.ui.theme.main.LoadMainScreen
 import com.promethean.proxy.ui.theme.Animation
 import dagger.hilt.android.lifecycle.HiltViewModel
+import org.json.JSONException
+import org.json.JSONObject
+import java.time.OffsetDateTime
 import javax.inject.Inject
 
 
@@ -34,8 +34,9 @@ fun AuthenticationScreen(
 @HiltViewModel
 class Authentication @Inject constructor(
     val networkManager: NetworkManager,
-    @SettingsPrefs val prefs: SharedPreferences
+    private val preferenceRepository: PreferenceRepository,
 ) : ViewModel() {
+
 
     var connectionStatus by mutableStateOf<Boolean?>(null)
     var authResult by mutableStateOf<Boolean?>(null)
@@ -46,14 +47,10 @@ class Authentication @Inject constructor(
 
     @Composable
     fun AuthenticationUI() {
-
         if (isManualLoginMode) {
             LoginPageUI()
             return
         }
-
-        val initialToken = prefs.getString("token", "")
-        val initialExpiry = prefs.getString("tokenExpiry", "")
 
         LaunchedEffect(retryTrigger) {
             connectionStatus = null
@@ -61,20 +58,28 @@ class Authentication @Inject constructor(
             connectionStatus = isConnected
         }
 
-        val isAlreadyAuthenticated = !initialToken.isNullOrEmpty() &&
-                !initialExpiry.isNullOrEmpty() &&
-                initialExpiry.isValidToken()
+        LaunchedEffect(connectionStatus) {
+            if (connectionStatus == true) {
 
-        LaunchedEffect(connectionStatus, isAlreadyAuthenticated) {
-            if (connectionStatus == true && !isAlreadyAuthenticated) {
-                val result = login()
-                authResult = result.first
-                errorMessage = result.second
-            } else if (connectionStatus == true && isAlreadyAuthenticated) {
-                authResult = true
+
+                val initialToken = preferenceRepository.getToken()
+                val initialExpiry = preferenceRepository.getTokenExpiry()
+
+                val isAlreadyAuthenticated = initialToken.isNotEmpty() &&
+                        initialExpiry.isNotEmpty() &&
+                        initialExpiry.isValidToken()
+
+                if (!isAlreadyAuthenticated) {
+                    val result = login()
+                    authResult = result.first
+                    errorMessage = result.second
+                } else {
+                    authResult = true
+                }
             }
         }
 
+        // 3. UI State Rendering
         when (connectionStatus) {
             null -> Animation().CircleProgressIndicator("Checking connection...")
             false -> {
@@ -96,16 +101,18 @@ class Authentication @Inject constructor(
         }
     }
 
+
     suspend fun login(
     ): Pair<Boolean, String> = withContext(Dispatchers.IO) {
-        val username = prefs.getString("username", "")
-        val password = prefs.getString("password", "")
+        val username = preferenceRepository.getUsername()
+        val password = preferenceRepository.getPassword()
+
 
         if (username.isNullOrEmpty()) {
             return@withContext Pair(false, "Username is empty")
         }
 
-        val jsonString = org.json.JSONObject().apply {
+        val jsonString = JSONObject().apply {
             put("username", username)
             put("password", password)
         }.toString()
@@ -121,21 +128,19 @@ class Authentication @Inject constructor(
         }
 
         try {
-            val jsonResult = org.json.JSONObject(returnBody)
+            val jsonResult = JSONObject(returnBody)
             if (jsonResult.has("token")) {
                 val token = jsonResult.getString("token")
                 val expires = jsonResult.getString("expires")
 
-                prefs.edit {
-                    putString("token", token)
-                        .putString("tokenExpiry", expires)
-                }
+                preferenceRepository.setToken(token)
+                preferenceRepository.setTokenExpiry(expires)
 
                 Pair(true, "")
             } else {
                 Pair(false, "Login failed: Server did not return a token")
             }
-        } catch (e: org.json.JSONException) {
+        } catch (e: JSONException) {
             Pair(false, "Error parsing server response")
         }
     }
@@ -164,8 +169,8 @@ class Authentication @Inject constructor(
 
 fun String.isValidToken(): Boolean {
     return try {
-        val expiryDate = java.time.OffsetDateTime.parse(this)
-        expiryDate.isAfter(java.time.OffsetDateTime.now())
+        val expiryDate = OffsetDateTime.parse(this)
+        expiryDate.isAfter(OffsetDateTime.now())
     } catch (e: Exception) {
         false
     }

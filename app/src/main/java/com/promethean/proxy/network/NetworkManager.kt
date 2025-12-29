@@ -1,40 +1,51 @@
 package com.promethean.proxy.network
 
 import android.Manifest
-import android.content.SharedPreferences
 import android.net.ConnectivityManager
 import androidx.annotation.RequiresPermission
-import com.promethean.proxy.di.SettingsPrefs
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.intPreferencesKey
+import androidx.datastore.preferences.core.stringPreferencesKey
+import com.promethean.proxy.di.PreferenceRepository
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
 import okhttp3.*
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.RequestBody.Companion.toRequestBody
-import java.io.IOException
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 
 @Singleton
 class NetworkManager @Inject constructor(
-    @SettingsPrefs private val prefs: SharedPreferences,
+    private val preferenceRepository: PreferenceRepository,
     private val connectivityManager: ConnectivityManager,
     private val okHttpClient: OkHttpClient
 ) {
-    private var fullUrl: String = ""
-
-    init {
-        updateConfig()
+    companion object {
+        val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
+        val URL_KEY = stringPreferencesKey("url")
+        val PORT_KEY = intPreferencesKey("port")
+        val TOKEN_KEY = stringPreferencesKey("token")
     }
 
-    fun updateConfig() {
-        val baseUrl = prefs.getString("url", "")
-        
-        // Handle case where port might be stored as String (common in some preference libs)
-        val port = try {
-            prefs.getInt("port", 443)
-        } catch (e: Exception) {
-            prefs.getString("port", "443")?.toIntOrNull() ?: 443
+    var fullUrl = ""
+
+    init {
+        scope.launch {
+            updateConfig()
         }
+    }
+
+    suspend fun updateConfig() {
+
+        val baseUrl = preferenceRepository.getUrl()
+        val port = preferenceRepository.getPort()
+
 
         if (!baseUrl.isNullOrEmpty()) {
             fullUrl = when {
@@ -68,8 +79,8 @@ class NetworkManager @Inject constructor(
     }
 
     suspend fun postWithToken(uri: String, body: String): String {
-        val token = prefs.getString("token", "")
-        if (token.isNullOrEmpty()) return "Expired"
+        val token = preferenceRepository.getToken()
+        if (token.isEmpty()) return "Expired"
         return post(uri, body, "application/json", token)
     }
 
