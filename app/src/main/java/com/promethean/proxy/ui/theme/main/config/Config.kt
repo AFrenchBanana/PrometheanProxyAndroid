@@ -41,18 +41,39 @@ class ConfigViewModel @Inject constructor(
     @SettingsPrefs private val prefs: SharedPreferences
 ) : ViewModel() {
 
-    private val _boolean = MutableStateFlow(prefs.getBoolean("proxy_enabled", false))
-    val updatedBoolean: StateFlow<Boolean> = _boolean.asStateFlow()
+    init {
+        try {
+            prefs.getInt("proxy_port", 8080)
+        } catch (e: ClassCastException) {
+            val stringVal = prefs.getString("proxy_port", "8080")
+            val intVal = stringVal?.toIntOrNull() ?: 8080
+            prefs.edit().remove("proxy_port").putInt("proxy_port", intVal).apply()
+        }
+    }
 
+    private val _proxyEnabled = MutableStateFlow(prefs.getBoolean("proxy_enabled", false))
+    val proxyEnabled: StateFlow<Boolean> = _proxyEnabled.asStateFlow()
+
+    private val _portPreference = MutableStateFlow(prefs.getInt("proxy_port", 8080).toString())
+    val portPreference: StateFlow<String> = _portPreference.asStateFlow()
+
+    private val _hostPreference = MutableStateFlow(prefs.getString("proxy_host", "127.0.0.1") ?: "127.0.0.1")
+    val hostPreference: StateFlow<String> = _hostPreference.asStateFlow()
+
+    fun toggleProxy(enabled: Boolean) {
+        _proxyEnabled.value = enabled
+        prefs.edit().putBoolean("proxy_enabled", enabled).apply()
+    }
 
     fun savePort(port: String) {
-        _portPreference.value = port
-        prefs.edit().putString("port", port).apply()
+        val portInt = port.toIntOrNull() ?: 8080
+        _portPreference.value = portInt.toString()
+        prefs.edit().putInt("proxy_port", portInt).apply()
     }
 
     fun saveHost(host: String) {
         _hostPreference.value = host
-        prefs.edit().putString("host", host).apply()
+        prefs.edit().putString("proxy_host", host).apply()
     }
 }
 
@@ -109,11 +130,10 @@ class Config {
 
     @Composable
     fun ConfigUI() {
-        val vm: SettingsViewModel = hiltViewModel()
+        val vm: ConfigViewModel = hiltViewModel()
 
         val settingsData = listOf(
-            SettingGroup(
-                title = R.string.settings_first_category,
+            SettingGroup(title = R.string.settings_first_category,
                 items = listOf(
                     SettingItem.Toggle(
                         name = R.string.enable_proxy,

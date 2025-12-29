@@ -20,13 +20,9 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
-import androidx.datastore.core.DataStore
-import androidx.datastore.preferences.core.Preferences
-import androidx.datastore.preferences.core.edit
-import androidx.datastore.preferences.core.intPreferencesKey
-import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
+import com.promethean.proxy.di.PreferenceRepository
 import com.promethean.proxy.network.NetworkManager
 import com.promethean.proxy.network.NetworkManager.Companion.scope
 import com.promethean.proxy.validation.*
@@ -40,7 +36,7 @@ import javax.inject.Inject
 @HiltViewModel
 class LoginViewModel @Inject constructor(
     val networkManager: NetworkManager,
-    private val dataStore: DataStore<Preferences>,
+    private val preferenceRepository: PreferenceRepository,
 ) : ViewModel() {
 
     private companion object {
@@ -51,12 +47,10 @@ class LoginViewModel @Inject constructor(
 
     suspend fun saveAndConnect(ip: String, port: Int, username: String, password: String, onComplete: () -> Unit) {
 
-        dataStore.edit { prefs ->
-            prefs[URL_KEY] = ip
-            prefs[PORT_KEY] = port
-            prefs[USERNAME_KEY] = username
-            prefs[PASSWORD_KEY] = password
-        }
+        preferenceRepository.setUrl(ip)
+        preferenceRepository.setPort(port)
+        preferenceRepository.setUsername(username)
+        preferenceRepository.setPassword(password)
 
         networkManager.updateConfig()
         onComplete()

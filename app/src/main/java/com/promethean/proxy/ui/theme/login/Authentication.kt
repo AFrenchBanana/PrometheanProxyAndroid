@@ -79,7 +79,6 @@ class Authentication @Inject constructor(
             }
         }
 
-        // 3. UI State Rendering
         when (connectionStatus) {
             null -> Animation().CircleProgressIndicator("Checking connection...")
             false -> {
