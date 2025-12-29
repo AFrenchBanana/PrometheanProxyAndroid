@@ -63,7 +63,7 @@ object StorageModule {
 @Singleton
 class PreferenceRepository @Inject constructor(
     private val dataStore: DataStore<Preferences>,
-    @SettingsPrefs private val secretPrefs: SharedPreferences // 3. Add qualifier here
+    @SettingsPrefs private val secretPrefs: SharedPreferences
 ) {
     private object Keys {
         val URL_KEY = stringPreferencesKey("ip")
@@ -74,7 +74,6 @@ class PreferenceRepository @Inject constructor(
         const val PASSWORD_KEY = "password"
         const val TOKEN = "token"
         const val TOKEN_EXPIRY = "tokenExpiry"
-
     }
 
     suspend fun <T> getValue(key: Preferences.Key<T>, default: T): T {
