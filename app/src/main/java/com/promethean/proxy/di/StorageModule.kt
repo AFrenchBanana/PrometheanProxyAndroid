@@ -11,6 +11,7 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
+import com.promethean.proxy.ui.theme.style.ThemeStyle
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -69,6 +70,8 @@ class PreferenceRepository @Inject constructor(
         val URL_KEY = stringPreferencesKey("ip")
         val PORT_KEY = intPreferencesKey("port")
         val WITH_AUTH = booleanPreferencesKey("withAuth")
+        val THEME = stringPreferencesKey("theme")
+
 
         const val USERNAME_KEY = "username"
         const val PASSWORD_KEY = "password"
@@ -93,6 +96,12 @@ class PreferenceRepository @Inject constructor(
 
     suspend fun getWithAuth() = getValue(Keys.WITH_AUTH, true)
     suspend fun setWithAuth(value: Boolean) = setValue(Keys.WITH_AUTH, value)
+
+    suspend fun getTheme() = getValue(Keys.THEME, ThemeStyle.BLUE.name)
+    suspend fun setTheme(style: ThemeStyle) {
+        setValue(Keys.THEME, style.name)
+    }
+
 
     // Secret Prefs
     fun getUsername() = secretPrefs.getString(Keys.USERNAME_KEY, "") ?: ""

@@ -82,7 +82,6 @@ fun LoginForm(viewModel: LoginViewModel, context: Context) {
         scope.launch {
             viewModel.saveAndConnect(ip, port, login, password) {
                 Log.d("LoginForm", "Preferences saved and Config Updated")
-                Toast.makeText(context, "Settings updated", Toast.LENGTH_SHORT).show()
 
                 if (viewModel.networkManager.haveNetwork()) {
                     submitted = true

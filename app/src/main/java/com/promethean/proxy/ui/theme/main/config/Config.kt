@@ -29,6 +29,7 @@ import com.promethean.proxy.R
 import com.promethean.proxy.di.SettingsPrefs
 import com.promethean.proxy.network.NetworkManager
 import com.promethean.proxy.ui.theme.login.LoginViewModel
+import com.promethean.proxy.ui.theme.style.ThemeSwitcher
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -131,6 +132,10 @@ class Config {
     @Composable
     fun ConfigUI() {
         val vm: ConfigViewModel = hiltViewModel()
+        ThemeSwitcher(
+            currentStyle = TODO(),
+            onStyleChange = TODO()
+        )
 
         val settingsData = listOf(
             SettingGroup(title = R.string.settings_first_category,

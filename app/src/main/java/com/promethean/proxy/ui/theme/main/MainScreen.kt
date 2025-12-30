@@ -45,7 +45,6 @@ class MainScreens @Inject constructor(
         var httptext by remember { mutableStateOf<String?>("") }
 
         val config = Config()
-
         Scaffold(
 
             bottomBar = {
