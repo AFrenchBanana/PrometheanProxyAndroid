@@ -18,6 +18,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.promethean.proxy.network.NetworkManager
 import com.promethean.proxy.di.SettingsPrefs
 import com.promethean.proxy.ui.theme.main.config.Config
+import com.promethean.proxy.ui.theme.main.dashboard.Dashboard
 import com.promethean.proxy.ui.theme.style.PrometheanProxyTheme
 import com.promethean.proxy.ui.theme.style.ThemeMode
 import com.promethean.proxy.ui.theme.style.ThemeSwitcher
@@ -52,6 +53,8 @@ fun MainScreenContent(
     var httptext by remember { mutableStateOf<String?>("") }
 
     val config = Config()
+    val dashboard = Dashboard()
+
     Scaffold(
         bottomBar = {
             NavigationBar {
@@ -74,7 +77,7 @@ fun MainScreenContent(
                     httpText = httptext,
                     onResultReceived = { httptext = it }
                 )
-                1 -> Text("Placeholder for Dash")
+                1 -> dashboard.DashboardUI()
                 2 -> config.ConfigUI()
             }
         }
