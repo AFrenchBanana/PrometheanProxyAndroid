@@ -132,10 +132,6 @@ class Config {
     @Composable
     fun ConfigUI() {
         val vm: ConfigViewModel = hiltViewModel()
-        ThemeSwitcher(
-            currentStyle = TODO(),
-            onStyleChange = TODO()
-        )
 
         val settingsData = listOf(
             SettingGroup(title = R.string.settings_first_category,

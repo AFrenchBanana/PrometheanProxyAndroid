@@ -1,23 +1,30 @@
 package com.promethean.proxy.di
 
+import android.R
 import android.content.Context
 import android.content.SharedPreferences
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
+import com.promethean.proxy.ui.theme.style.ThemeMode
 import com.promethean.proxy.ui.theme.style.ThemeStyle
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
+import java.io.IOException
 import javax.inject.Inject
 import javax.inject.Qualifier
 import javax.inject.Singleton
@@ -36,6 +43,7 @@ private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(
 @Module
 @InstallIn(SingletonComponent::class)
 object StorageModule {
+
 
     @Provides
     @Singleton
@@ -64,13 +72,14 @@ object StorageModule {
 @Singleton
 class PreferenceRepository @Inject constructor(
     private val dataStore: DataStore<Preferences>,
-    @SettingsPrefs private val secretPrefs: SharedPreferences // 3. Add qualifier here
+    @SettingsPrefs private val secretPrefs: SharedPreferences
 ) {
     private object Keys {
         val URL_KEY = stringPreferencesKey("ip")
         val PORT_KEY = intPreferencesKey("port")
         val WITH_AUTH = booleanPreferencesKey("withAuth")
         val THEME = stringPreferencesKey("theme")
+        val THEME_MODE = stringPreferencesKey("themeMode")
 
 
         const val USERNAME_KEY = "username"
@@ -97,11 +106,27 @@ class PreferenceRepository @Inject constructor(
     suspend fun getWithAuth() = getValue(Keys.WITH_AUTH, true)
     suspend fun setWithAuth(value: Boolean) = setValue(Keys.WITH_AUTH, value)
 
-    suspend fun getTheme() = getValue(Keys.THEME, ThemeStyle.BLUE.name)
-    suspend fun setTheme(style: ThemeStyle) {
-        setValue(Keys.THEME, style.name)
-    }
+    val themeFlow: Flow<ThemeStyle> = dataStore.data
+        .catch { exception ->
+            if (exception is IOException) emit(emptyPreferences()) else throw exception
+        }
+        .map { preferences ->
+            val name = preferences[Keys.THEME] ?: ThemeStyle.BLUE.name
+            try { ThemeStyle.valueOf(name) } catch (e: Exception) { ThemeStyle.BLUE }
+        }
 
+    val themeModeFlow: Flow<ThemeMode> = dataStore.data
+        .catch { exception ->
+            if (exception is IOException) emit(emptyPreferences()) else throw exception
+        }
+        .map { preferences ->
+            val name = preferences[Keys.THEME_MODE] ?: ThemeMode.SYSTEM.name
+            try { ThemeMode.valueOf(name) } catch (e: Exception) { ThemeMode.SYSTEM }
+        }
+
+    suspend fun setTheme(style: ThemeStyle) { setValue(Keys.THEME, style.name) }
+
+    suspend fun setThemeMode(mode: ThemeMode) { setValue(Keys.THEME_MODE, mode.name)   }
 
     // Secret Prefs
     fun getUsername() = secretPrefs.getString(Keys.USERNAME_KEY, "") ?: ""

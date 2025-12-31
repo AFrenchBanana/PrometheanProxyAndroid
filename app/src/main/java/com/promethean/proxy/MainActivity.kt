@@ -13,11 +13,12 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.promethean.proxy.di.PreferenceRepository
 import com.promethean.proxy.ui.theme.style.Animation
 import com.promethean.proxy.ui.theme.login.AuthenticationScreen
 import com.promethean.proxy.ui.theme.login.LoginPageUI
-import com.promethean.proxy.ui.theme.style.PrometheanProxyAndroidTheme
+import com.promethean.proxy.ui.theme.style.PrometheanProxyTheme
 import com.promethean.proxy.validation.validPort
 import dagger.hilt.android.HiltAndroidApp
 import dagger.hilt.android.AndroidEntryPoint
@@ -40,17 +41,17 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             var isConfigured by remember { mutableStateOf<Boolean?>(null) }
-            PrometheanProxyAndroidTheme {
+            val themeViewModel: PrometheanProxyTheme = hiltViewModel()
+
+            themeViewModel.PrometheanTheme {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
+                    LaunchedEffect(Unit) {
+                        isConfigured = initialConfigCheck()
+                    }
 
-                LaunchedEffect(Unit) {
-                    isConfigured = initialConfigCheck()
-                }
-
-                MaterialTheme {
                     when (isConfigured) {
                         true -> AuthenticationScreen()
                         false -> LoginPageUI()
@@ -58,7 +59,7 @@ class MainActivity : ComponentActivity() {
                             Animation().CircleProgressIndicator()
                         }
                     }
-                }}
+                }
             }
         }
     }
