@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">com.promethean.proxy</string>
+    <string name="app_name">Promethean Proxy</string>
     <string name="settings_first_category">Config</string>
     <string name="settings_second_category">Additional</string>
     <string name="title">TestTitle</string>
