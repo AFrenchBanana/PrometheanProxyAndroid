@@ -1,4 +1,4 @@
-package com.promethean.proxy.ui.theme
+package com.promethean.proxy.ui.theme.style
 
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding

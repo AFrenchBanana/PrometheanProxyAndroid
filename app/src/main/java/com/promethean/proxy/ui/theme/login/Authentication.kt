@@ -15,7 +15,7 @@ import androidx.lifecycle.ViewModel
 import com.promethean.proxy.di.PreferenceRepository
 import com.promethean.proxy.network.NetworkManager
 import com.promethean.proxy.ui.theme.main.LoadMainScreen
-import com.promethean.proxy.ui.theme.Animation
+import com.promethean.proxy.ui.theme.style.Animation
 import dagger.hilt.android.lifecycle.HiltViewModel
 import org.json.JSONException
 import org.json.JSONObject

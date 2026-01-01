@@ -2,6 +2,7 @@ package com.promethean.proxy.network
 
 import android.Manifest
 import android.net.ConnectivityManager
+import android.util.Log
 import androidx.annotation.RequiresPermission
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
@@ -62,20 +63,33 @@ class NetworkManager @Inject constructor(
     @RequiresPermission(Manifest.permission.ACCESS_NETWORK_STATE)
     fun haveNetwork(): Boolean = connectivityManager.activeNetwork != null
 
-    suspend fun getFromServer(uri: String): String = withContext(Dispatchers.IO) {
+    suspend fun getFromServer(uri: String, token: String? = null): String = withContext(Dispatchers.IO) {
         if (fullUrl.isEmpty()) return@withContext ""
-        
+
         val url = fullUrl + (if (uri.startsWith("/")) uri else "/$uri")
+        Log.d("NetworkManager", "GET Request URL: $url") // Added logging for URI
+
         try {
             val request = Request.Builder()
                 .url(url)
+                .apply { if (token != null) header("Authorization", "Bearer $token") }
                 .build()
+
             okHttpClient.newCall(request).execute().use { response ->
-                response.body?.string() ?: ""
+                val responseBody = response.body?.string() ?: ""
+                Log.d("NetworkManager", "GET Response Body: $responseBody") // Added logging for Body
+                responseBody
             }
         } catch (e: Exception) {
+            Log.e("NetworkManager", "GET Request failed for $url", e)
             ""
         }
+    }
+
+    suspend fun getWithToken(uri: String): String {
+        val token = preferenceRepository.getToken()
+        if (token.isEmpty()) return "Expired"
+        return getFromServer(uri, token)
     }
 
     suspend fun postWithToken(uri: String, body: String): String {
@@ -109,7 +123,9 @@ class NetworkManager @Inject constructor(
 
     suspend fun testConnection(): Boolean {
         if (fullUrl.isEmpty()) return false
-        val data = getFromServer("/ping")
+        val data = getFromServer(
+            uri = "/ping",
+        )
         return data.contains("pong")
     }
 
