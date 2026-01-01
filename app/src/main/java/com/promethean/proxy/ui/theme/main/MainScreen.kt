@@ -15,7 +15,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
 import com.promethean.proxy.network.NetworkManager
 import com.promethean.proxy.di.SettingsPrefs
-import com.promethean.proxy.ui.theme.main.config.Config
+import com.promethean.proxy.ui.theme.main.config.ConfigUI
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -44,8 +44,6 @@ class MainScreens @Inject constructor(
         val icons = listOf(Icons.Filled.Home, Icons.Filled.Dashboard, Icons.Filled.Settings)
         var httptext by remember { mutableStateOf<String?>("") }
 
-        val config = Config()
-
         Scaffold(
 
             bottomBar = {
@@ -69,7 +67,7 @@ class MainScreens @Inject constructor(
                     )
 
                     1 -> Text("Placeholder for Dash")
-                    2 -> config.ConfigUI()
+                    2 -> ConfigUI()
                 }
             }
         }
